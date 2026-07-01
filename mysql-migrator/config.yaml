@@ -1,0 +1,71 @@
+# ============================================================
+#  MySQL 跨实例数据迁移 — 配置文件
+# ============================================================
+
+# ---------- 源库（A库）----------
+source_db:
+  host: "A服务器IP"
+  port: 3306
+  user: "root"
+  password: "***"
+  database: "test_db"
+  charset: "utf8mb4"
+
+# ---------- 目标库（B库）----------
+target_db:
+  host: "B服务器IP"
+  port: 3306
+  user: "root"
+  password: "***"
+  database: "目标库名"
+  charset: "utf8mb4"
+
+# ---------- 全局设置 ----------
+batch_size: 1000       # 每批读取行数
+dry_run: false         # true=只打印不写入, 先验证数据
+
+# ---------- 表映射列表 ----------
+# 每张表一个条目，支持多表
+tables:
+  - source: "j__4c07d466_32b2_4828_9e74_299c5810cacb_0"
+    target: "dwd_boc_fxpf1"
+    unique_key: "UNI_SC_ID"          # B库主键，为空则跳过该行
+    description: "博茨瓦纳评分表"     # 可选，日志用
+    columns:
+      - source: "UNI_SC_ID"
+        target: "UNI_SC_ID"
+        type: "string"
+      - source: "CORP_NAME"
+        target: "CORP_NAME"
+        type: "string"
+      - source: "PERSON_CERT_ID"
+        target: "PERSON_CERT_ID"
+        type: "string"
+      - source: "qypj"
+        target: "qypj"
+        type: "int"
+      - source: "zjrspj"
+        target: "zjrspj"
+        type: "int"
+      - source: "scjbzsc"
+        target: "scjbzsc"
+        type: "int"
+      - source: "ljfbys"
+        target: "ljfbys"
+        type: "int"
+      - source: "jnlx"
+        target: "jnlx"
+        type: "int"
+
+  # ---- 示例：添加第二张表 ----
+  # - source: "j__abc123_source_table"
+  #   target: "dwd_another_target"
+  #   unique_key: "ID"
+  #   columns:
+  #     - source: "ID"
+  #       target: "ID"
+  #       type: "string"
+  #     - source: "field_a"
+  #       target: "field_a"
+  #       type: "int"
+  #     # ... 更多字段
