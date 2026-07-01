@@ -21,7 +21,8 @@ target_db:
   charset: "utf8mb4"
 
 # ---------- 全局设置 ----------
-batch_size: 1000       # 每批读取行数
+batch_size: 5000       # 每批 SELECT 行数
+insert_batch: 500      # 每批 INSERT 行数（一条 SQL 包含的行数）
 dry_run: false         # true=只打印不写入, 先验证数据
 
 # ---------- 表映射列表 ----------
