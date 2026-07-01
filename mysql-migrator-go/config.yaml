@@ -1,8 +1,9 @@
 # ============================================================
 #  MySQL 跨实例数据迁移 — 配置文件
+#  支持目标类型: MySQL (批量 INSERT) 或 Apache Doris (Stream Load)
 # ============================================================
 
-# ---------- 源库（A库）----------
+# ---------- 源库（始终是 MySQL）----------
 source_db:
   host: "172.18.1.173"
   port: 13306
@@ -11,7 +12,10 @@ source_db:
   database: "test_db"
   charset: "utf8mb4"
 
-# ---------- 目标库（B库）----------
+# ---------- 目标类型: mysql | doris ----------
+target_type: "mysql"
+
+# ---------- MySQL 目标（target_type=mysql 时使用）----------
 target_db:
   host: "172.18.1.173"
   port: 13306
@@ -20,18 +24,31 @@ target_db:
   database: "test_db"
   charset: "utf8mb4"
 
+# ---------- Doris 目标（target_type=doris 时使用）----------
+# doris:
+#   host: "192.168.1.100"         # FE 地址
+#   http_port: 8030               # FE HTTP 端口（默认 8030）
+#   user: "root"
+#   password: ""
+#   database: "test_db"
+#   stream_batch: 200000          # 每批 Stream Load 行数
+#   max_filter_ratio: 0.0         # 脏数据容忍比例 (0~1)
+#   strict_mode: false            # 严格模式（类型不匹配报错）
+#   timeout: 600                  # Stream Load 超时秒数
+#   label_prefix: "migrate"       # load label 前缀（幂等去重用）
+
 # ---------- 全局设置 ----------
-batch_size: 5000       # 每批 SELECT 行数
-insert_batch: 500      # 每批 INSERT 行数（一条 SQL 包含的行数）
-dry_run: false         # true=只打印不写入, 先验证数据
+batch_size: 5000       # 每批 SELECT 行数 (Doris 建议 20000+)
+insert_batch: 500      # MySQL 每批 INSERT 行数 (Doris 不使用)
+stream_batch: 200000   # Doris 每批 Stream Load 行数 (MySQL 不使用)
+dry_run: false
 
 # ---------- 表映射列表 ----------
-# 每张表一个条目，支持多表
 tables:
   - source: "j__4c07d466_32b2_4828_9e74_299c5810cacb_0"
     target: "dwd_boc_fxpf1"
-    unique_key: "UNI_SC_ID"          # B库主键，为空则跳过该行
-    description: "评分表"     # 可选，日志用
+    unique_key: "UNI_SC_ID"
+    description: "评分表"
     columns:
       - source: "UNI_SC_ID"
         target: "UNI_SC_ID"
@@ -57,16 +74,3 @@ tables:
       - source: "jnlx"
         target: "jnlx"
         type: "int"
-
-  # ---- 示例：添加第二张表 ----
-  # - source: "j__abc123_source_table"
-  #   target: "dwd_another_target"
-  #   unique_key: "ID"
-  #   columns:
-  #     - source: "ID"
-  #       target: "ID"
-  #       type: "string"
-  #     - source: "field_a"
-  #       target: "field_a"
-  #       type: "int"
-  #     # ... 更多字段

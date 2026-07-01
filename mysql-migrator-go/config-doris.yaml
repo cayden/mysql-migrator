@@ -1,36 +1,75 @@
 # ============================================================
-#  MySQL 跨实例数据迁移 — 配置文件 (business_gouwu)
+#  Doris Stream Load 配置文件示例
+#  用法: ./mysql-migrator -c config-doris.yaml
 # ============================================================
 
-# ---------- 源库（A库）----------
+# ---------- 源库（MySQL）----------
 source_db:
   host: "192.168.40.131"
-  port: 13306
+  port: 3306
   user: "root"
-  password: "123456"
+  password: "your_password"
   database: "gatest"
   charset: "utf8mb4"
 
-# ---------- 目标库（B库）----------
-target_db:
-  host: "192.168.40.131"
-  port: 13306
+# ---------- 目标: Apache Doris ----------
+target_type: "doris"
+
+# ---------- Doris 连接 ----------
+doris:
+  host: "192.168.1.100"         # Doris FE 地址
+  http_port: 8030               # FE HTTP 端口
   user: "root"
-  password: "123456"
-  database: "gatest"
-  charset: "utf8mb4"
+  password: ""
+  database: "test_db"           # 目标库
+  stream_batch: 200000          # 每批 Stream Load 行数（建议 10万-50万）
+  max_filter_ratio: 0.0         # 脏数据容忍: 0=零容忍, 0.1=允许10%
+  strict_mode: false            # false=自动类型推断, true=严格校验
+  timeout: 600                  # 超时秒数
+  label_prefix: "migrate"       # 唯一标签前缀
 
 # ---------- 全局设置 ----------
-batch_size: 5000       # 每批 SELECT 行数
-insert_batch: 500      # 每批 INSERT 行数（一条 SQL 包含的行数）
+batch_size: 50000       # Doris 场景可以开很大，源库 MySQL 扛得住就行
 dry_run: false
 
-# ---------- 表映射 ----------
+# ---------- 表映射列表 ----------
 tables:
-  - source: "business_gouwu"          # ← 填写 A 库对应的源表名
+  - source: "j__4c07d466_32b2_4828_9e74_299c5810cacb_0"
+    target: "dwd_boc_fxpf1"
+    unique_key: "UNI_SC_ID"
+    description: "评分表"
+    columns:
+      - source: "UNI_SC_ID"
+        target: "UNI_SC_ID"
+        type: "string"
+      - source: "CORP_NAME"
+        target: "CORP_NAME"
+        type: "string"
+      - source: "PERSON_CERT_ID"
+        target: "PERSON_CERT_ID"
+        type: "string"
+      - source: "qypj"
+        target: "qypj"
+        type: "int"
+      - source: "zjrspj"
+        target: "zjrspj"
+        type: "int"
+      - source: "scjbzsc"
+        target: "scjbzsc"
+        type: "int"
+      - source: "ljfbys"
+        target: "ljfbys"
+        type: "int"
+      - source: "jnlx"
+        target: "jnlx"
+        type: "int"
+
+  # ---- 大表示例: 200 万行业务流量表 ----
+  - source: "business_gouwu_src"
     target: "business_gouwu_dst"
-    unique_key: "rcid"           # B 库主键
-    description: "购物业务流量明细迁移"
+    unique_key: "rcid"
+    description: "购物业务流量明细"
+    stream_batch: 500000     # 大表可以开更大批次
     columns:
       - source: "tag"
         target: "tag"
@@ -43,7 +82,7 @@ tables:
         type: "string"
       - source: "acti"
         target: "acti"
-        type: "string"           # datetime 字段保持 string，MySQL 自动转换
+        type: "string"
       - source: "sccjsj"
         target: "sccjsj"
         type: "string"
